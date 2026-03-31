@@ -477,13 +477,12 @@
     }
 
     .op-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      flex-direction: column;
       gap: 20px;
     }
 
     @media (max-width: 640px) {
-      .op-grid { grid-template-columns: 1fr; }
       .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
       .stat-card { padding: 14px; }
       .stat-value { font-size: 22px; }
@@ -558,15 +557,18 @@
     .kb-input {
       border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
-      padding: 9px 12px;
+      padding: 10px 14px;
       font-family: 'Quicksand', sans-serif;
-      font-size: 13px;
+      font-size: 14px;
+      line-height: 1.6;
       color: var(--text);
       background: var(--bg);
       width: 100%;
       outline: none;
       transition: border-color 0.2s;
       resize: vertical;
+      min-height: 72px;
+      box-sizing: border-box;
     }
 
     .kb-input:focus { border-color: var(--green); background: white; }
@@ -588,13 +590,21 @@
 
     .save-btn:hover { opacity: 0.92; transform: translateY(-1px); }
 
-    .save-success {
-      text-align: center;
+    .save-toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green);
+      color: white;
       font-size: 13px;
-      font-weight: 600;
-      color: var(--green);
-      margin-top: 8px;
+      font-weight: 700;
+      padding: 10px 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(76,175,125,0.4);
+      z-index: 1000;
       animation: fadeUp 0.3s ease;
+      white-space: nowrap;
     }
 
     /* ── LOG ── */
@@ -602,8 +612,6 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-height: 480px;
-      overflow-y: auto;
     }
 
     .log-item {
@@ -719,8 +727,7 @@
     }
 
     .kb-overflow {
-      max-height: 520px;
-      overflow-y: auto;
+      overflow-y: visible;
     }
 
     .divider {
@@ -1068,6 +1075,9 @@ function App() {
 
   return (
     <div id="root" style={{minHeight:'100vh',display:'flex',flexDirection:'column'}}>
+      {/* TOAST */}
+      {saveFeedback && <div className="save-toast">{saveFeedback}</div>}
+
       {/* TOP NAV */}
       <nav className="topnav">
         <div className="logo">
@@ -1263,16 +1273,20 @@ function App() {
                       <textarea
                         className="kb-input"
                         ref={key==='customFAQ' ? customFaqRef : null}
-                        rows={key==='customFAQ'?5:2}
+                        rows={key==='customFAQ'?6:3}
                         value={kb[key]}
-                        onChange={e=>setKb(prev=>({...prev,[key]:e.target.value}))}
+                        onChange={e=>{
+                          setKb(prev=>({...prev,[key]:e.target.value}));
+                          e.target.style.height='auto';
+                          e.target.style.height=e.target.scrollHeight+'px';
+                        }}
                         style={key==='customFAQ' && kbHighlight ? {borderColor:'var(--sun)',background:'var(--sun-light)',transition:'all 0.3s'} : {}}
                       />
                     </div>
                   </div>
                 ))}
                 <button className="save-btn" onClick={saveKb}>Save Knowledge Base</button>
-                {saveFeedback && <div className="save-success">{saveFeedback}</div>}
+                
               </div>
             </div>
 
