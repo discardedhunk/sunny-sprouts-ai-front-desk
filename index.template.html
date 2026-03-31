@@ -133,7 +133,7 @@
     }
 
     .chat-header {
-      background: linear-gradient(135deg, var(--green) 0%, #3D9970 100%);
+      background: linear-gradient(135deg, #3B82C4 0%, #2563A8 100%);
       padding: 20px;
       color: white;
       display: flex;
@@ -247,7 +247,7 @@
       flex-shrink: 0;
     }
 
-    .msg-avatar.bot { background: linear-gradient(135deg, var(--green), #3D9970); color: white; }
+    .msg-avatar.bot { background: linear-gradient(135deg, #3B82C4, #2563A8); color: white; }
     .msg-avatar.user { background: linear-gradient(135deg, var(--sky), #3A9FD9); color: white; }
 
     .bubble {
@@ -288,6 +288,20 @@
       padding: 3px 8px;
       border-radius: 6px;
       margin-bottom: 8px;
+    }
+
+    .confidence-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: var(--green-light);
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+      margin-top: 7px;
+      letter-spacing: 0.02em;
     }
 
     .timestamp {
@@ -811,6 +825,7 @@ function App() {
   const [opPasswordInput, setOpPasswordInput] = useState('');
   const [opAuthError, setOpAuthError] = useState(false);
   const [kbHighlight, setKbHighlight] = useState(false);
+  const [kbDrafting, setKbDrafting] = useState(false);
   const [pendingKbAdd, setPendingKbAdd] = useState(null);
   const customFaqRef = useRef(null);
   const [messages, setMessages] = useState([
@@ -952,23 +967,48 @@ function App() {
     setTimeout(() => setSaveFeedback(''), 3000);
   }
 
-  function addToKb(question) {
-    const updated = (prev) => ({
+  async function addToKb(question) {
+    setKbDrafting(question);
+    // Draft a suggested answer using Claude, then pre-fill the KB
+    let suggestedAnswer = '[Add your answer here]';
+    if (apiKey) {
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 150,
+            messages: [{
+              role: 'user',
+              content: `You are helping a childcare center operator write a policy answer. Draft a concise, friendly suggested answer for the following parent question that the AI front desk couldn't answer. Write ONLY the answer text (1-3 sentences), no preamble.\n\nQuestion: "${question}"\n\nCenter name: ${kb.centerName}`
+            }]
+          })
+        });
+        const data = await res.json();
+        suggestedAnswer = data.content?.[0]?.text?.trim() || suggestedAnswer;
+      } catch {}
+    }
+
+    setKb(prev => ({
       ...prev,
-      customFAQ: prev.customFAQ + `\n\nQ: ${question}\nA: [Add your answer here]`
-    });
-    setKb(updated);
+      customFAQ: prev.customFAQ + `\n\nQ: ${question}\nA: ${suggestedAnswer}`
+    }));
+    setKbDrafting(false);
     setView('operator');
     if (opAuthed) {
-      // Already authed — scroll to custom FAQ and highlight it
       setTimeout(() => {
         customFaqRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         customFaqRef.current?.focus();
         setKbHighlight(true);
-        setTimeout(() => setKbHighlight(false), 2000);
+        setTimeout(() => setKbHighlight(false), 2500);
       }, 100);
     } else {
-      // Not authed — store question so we can highlight after login
       setPendingKbAdd(question);
     }
   }
@@ -1046,6 +1086,9 @@ function App() {
                       <div className="escalation-tag">⚡ Staff follow-up</div>
                     )}
                     {msg.text}
+                    {msg.status==='answered' && msg.role==='bot' && (
+                      <div className="confidence-tag">📋 From your handbook</div>
+                    )}
                   </div>
                   <div className="timestamp">{msg.time}</div>
                 </div>
@@ -1240,8 +1283,9 @@ function App() {
                                 style={{background:'#888'}}>
                                 ✓ Reviewed
                               </button>
-                              <button className="add-to-kb-btn" onClick={()=>addToKb(item.question)}>
-                                + Add to KB
+                              <button className="add-to-kb-btn" onClick={()=>addToKb(item.question)}
+                                disabled={kbDrafting===item.question}>
+                                {kbDrafting===item.question ? '✍️ Drafting…' : '+ Add to KB'}
                               </button>
                             </div>
                           )}
