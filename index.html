@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sunny Sprouts — AI Front Desk</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    :root {
+      --sun: #FFB830;
+      --sun-light: #FFF0C2;
+      --green: #4CAF7D;
+      --green-light: #E8F5EE;
+      --sky: #5BB8F5;
+      --sky-light: #EBF6FF;
+      --coral: #FF6B6B;
+      --coral-light: #FFE8E8;
+      --bg: #FFFDF7;
+      --surface: #FFFFFF;
+      --text: #2D3142;
+      --text-muted: #7B7F96;
+      --border: #EEE9D9;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+    }
+
+    #root { min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ── TOP NAV ── */
+    .topnav {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--sun), #FF9F1C);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 3px 8px rgba(255,184,48,0.4);
+    }
+
+    .view-toggle {
+      display: flex;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .view-btn {
+      padding: 7px 16px;
+      border: none;
+      background: transparent;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .view-btn.active {
+      background: var(--text);
+      color: white;
+      border-radius: 7px;
+    }
+
+    /* ── PARENT VIEW ── */
+    .parent-view {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 60px);
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, var(--green) 0%, #3D9970 100%);
+      padding: 20px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .chat-header-info h2 {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .chat-header-info p {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .online-dot {
+      width: 8px; height: 8px;
+      background: #7EFF9F;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .quick-questions {
+      padding: 12px 16px;
+      background: var(--green-light);
+      border-bottom: 1px solid #D4EDDA;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .quick-questions::-webkit-scrollbar { display: none; }
+
+    .quick-chip {
+      background: white;
+      border: 1.5px solid #C8E6D4;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    .quick-chip:hover {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--bg);
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      animation: fadeUp 0.3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user { flex-direction: row-reverse; }
+
+    .msg-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .msg-avatar.bot { background: linear-gradient(135deg, var(--green), #3D9970); color: white; }
+    .msg-avatar.user { background: linear-gradient(135deg, var(--sky), #3A9FD9); color: white; }
+
+    .bubble {
+      max-width: 78%;
+      padding: 12px 15px;
+      border-radius: 18px;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .bubble.bot {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .bubble.user {
+      background: linear-gradient(135deg, var(--green), #3D9970);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble.escalation {
+      background: var(--sun-light);
+      border: 1.5px solid var(--sun);
+      border-bottom-left-radius: 4px;
+    }
+
+    .escalation-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--sun);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .timestamp {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 12px 15px;
+    }
+
+    .typing-dot {
+      width: 7px; height: 7px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+
+    .chat-input-area {
+      padding: 12px 16px;
+      background: white;
+      border-top: 1.5px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .chat-input {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 22px;
+      padding: 10px 16px;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      background: var(--bg);
+      color: var(--text);
+      max-height: 100px;
+      transition: border-color 0.2s;
+    }
+
+    .chat-input:focus { border-color: var(--green); }
+
+    .send-btn {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--green), #3D9970);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 3px 10px rgba(76,175,125,0.4);
+    }
+
+    .send-btn:hover { transform: scale(1.07); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── OPERATOR VIEW ── */
+    .operator-view {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      width: 100%;
+    }
+
+    .op-header {
+      margin-bottom: 28px;
+    }
+
+    .op-header h1 {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      color: var(--text);
+    }
+
+    .op-header p {
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-size: 14px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.green { background: var(--green-light); }
+    .stat-icon.sun { background: var(--sun-light); }
+    .stat-icon.coral { background: var(--coral-light); }
+
+    .stat-value {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    .op-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 640px) {
+      .op-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-body { padding: 16px 20px; }
+
+    .kb-section {
+      margin-bottom: 18px;
+    }
+
+    .kb-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .kb-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .kb-field label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .kb-input {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+
+    .kb-input:focus { border-color: var(--green); background: white; }
+
+    .save-btn {
+      background: linear-gradient(135deg, var(--green), #3D9970);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 16px;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .save-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+
+    .save-success {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--green);
+      margin-top: 8px;
+      animation: fadeUp 0.3s ease;
+    }
+
+    /* ── LOG ── */
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 480px;
+      overflow-y: auto;
+    }
+
+    .log-item {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      background: var(--bg);
+      transition: border-color 0.2s;
+    }
+
+    .log-item.flagged {
+      border-color: var(--sun);
+      background: var(--sun-light);
+    }
+
+    .log-q {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .log-a {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .log-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge.answered { background: var(--green-light); color: var(--green); }
+    .badge.escalated { background: var(--sun-light); color: #CC8800; }
+    .badge.unknown { background: var(--coral-light); color: var(--coral); }
+
+    .add-to-kb-btn {
+      margin-left: auto;
+      background: var(--sun);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Quicksand', sans-serif;
+      transition: opacity 0.2s;
+    }
+
+    .add-to-kb-btn:hover { opacity: 0.85; }
+
+    .empty-log {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .api-key-banner {
+      background: var(--sun-light);
+      border: 1.5px solid var(--sun);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #7A5500;
+    }
+
+    .api-key-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .api-key-input {
+      flex: 1;
+      border: 1.5px solid var(--sun);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 13px;
+      outline: none;
+      background: white;
+    }
+
+    .api-key-btn {
+      background: var(--sun);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .kb-overflow {
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .divider {
+      height: 1.5px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+// ─── DEFAULT KNOWLEDGE BASE ───────────────────────────────────────────────────
+const DEFAULT_KB = {
+  centerName: "Sunny Sprouts Early Learning",
+  address: "2847 Blossom Creek Drive, Austin, TX 78702",
+  phone: "(512) 555-0193",
+  email: "hello@sunnysprouts.com",
+
+  hours: "Monday–Friday, 7:00 AM – 6:00 PM. We are closed on weekends.",
+
+  holidays: "We are closed on: New Year's Day, MLK Day, Presidents Day, Memorial Day, Juneteenth, July 4th, Labor Day, Veterans Day, Thanksgiving Day + the Friday after, Christmas Eve, and Christmas Day. We send a holiday calendar each August.",
+
+  tuition: "Infants (6 weeks–12 months): $1,850/month. Toddlers (13–24 months): $1,650/month. Twos (2–3 years): $1,450/month. Preschool (3–5 years): $1,250/month. Tuition is due on the 1st of each month. A $35 late fee applies after the 5th.",
+
+  sickPolicy: "Please keep your child home if they have a fever of 100.4°F or higher, vomiting, diarrhea, or a rash of unknown origin. Children must be fever-free (without medication) for 24 hours before returning. Please call or text us by 8:00 AM if your child will be absent.",
+
+  lunch: "We provide a hot lunch and two snacks daily, included in tuition. Today's lunch is turkey and cheese quesadillas with fruit cups. If your child forgets their packed lunch (for children with dietary restrictions on a custom meal plan), call us by 10:00 AM and we can provide a standard lunch for a $6 fee.",
+
+  tours: "We'd love to show you around! Tours are available Monday–Friday at 10:00 AM or 3:30 PM by appointment. Visit our website or call us to schedule. We typically have a 2–4 week waitlist for infant spots and open enrollment for preschool.",
+
+  dropoffPickup: "Drop-off: 7:00–9:00 AM. Pickup: anytime before 6:00 PM. A late pickup fee of $1/minute applies after 6:00 PM. Please ensure your child is signed in/out via the brightwheel app each day.",
+
+  enrollmentDocs: "To enroll, you'll need: completed enrollment application, copy of immunization records, pediatrician's health form, emergency contact form, and first month's tuition + $150 registration fee.",
+
+  allergies: "We are a nut-aware facility. No peanut or tree nut products are permitted. Please notify us of all allergies at enrollment. We keep epinephrine auto-injectors on site for enrolled children with documented allergy action plans.",
+
+  authorizedPickup: "Only individuals on your authorized pickup list may collect your child. To add someone temporarily, please call or text us before noon on that day. We will ask for photo ID from anyone we don't recognize.",
+
+  pottyTraining: "Children in our Preschool classroom (ages 3–5) must be fully potty trained. Our Twos classroom actively supports potty training with your guidance. Please bring 3 changes of clothing for children in training.",
+
+  customFAQ: "Q: Do you offer part-time enrollment?\nA: We offer a 3-day option (Mon/Wed/Fri) for Preschool and Twos classrooms at 75% of the monthly rate, subject to availability.\n\nQ: What curriculum do you use?\nA: We follow a play-based learning model aligned with Texas Pre-K guidelines. We use brightwheel to share daily activity reports and photos with families."
+};
+
+// ─── SYSTEM PROMPT BUILDER ─────────────────────────────────────────────────────
+function buildSystemPrompt(kb) {
+  return `You are the friendly AI Front Desk assistant for ${kb.centerName}, an early education center in Austin, TX. Your job is to help parents get fast, accurate answers about center policies and operations.
+
+KNOWLEDGE BASE:
+- Center name: ${kb.centerName}
+- Address: ${kb.address}
+- Phone: ${kb.phone}
+- Email: ${kb.email}
+- Hours: ${kb.hours}
+- Holidays/Closures: ${kb.holidays}
+- Tuition & Fees: ${kb.tuition}
+- Sick Policy: ${kb.sickPolicy}
+- Lunch & Snacks: ${kb.lunch}
+- Tours & Enrollment: ${kb.tours}
+- Drop-off & Pickup: ${kb.dropoffPickup}
+- Enrollment Documents: ${kb.enrollmentDocs}
+- Allergy Policy: ${kb.allergies}
+- Authorized Pickup: ${kb.authorizedPickup}
+- Potty Training Policy: ${kb.pottyTraining}
+- Additional FAQ: ${kb.customFAQ}
+
+RESPONSE RULES:
+1. Be warm, concise, and reassuring — parents are busy and sometimes anxious. Answer in 2–4 sentences max for simple questions.
+2. Only answer from the knowledge base above. Do NOT invent policies, fees, or dates.
+3. If a question is NOT covered in the knowledge base, say something like: "That's a great question — I want to make sure you get the right answer. I'll flag this for our staff and someone will follow up with you shortly. You can also reach us at ${kb.phone}."
+4. For SENSITIVE topics (child illness details, behavioral incidents, custody/pickup disputes, medical decisions), ALWAYS escalate: "For something this important, I'd like to connect you directly with our director. Please call us at ${kb.phone} or I'll make sure a staff member reaches out to you today."
+5. Start your response with a brief JSON metadata line (hidden from user display) in this exact format on the very first line, then a newline, then your actual response:
+STATUS:answered|escalated|unknown
+TOPIC:hours|tuition|sick|lunch|tours|pickup|enrollment|allergies|other
+
+Example:
+STATUS:answered
+TOPIC:hours
+Our center is open Monday through Friday, 7:00 AM to 6:00 PM. We're closed on weekends and major holidays — I can share our full holiday calendar if that would help!
+
+6. Keep your tone friendly and use the center's name naturally. Sign off with warmth when appropriate.`;
+}
+
+// ─── PARSE AI RESPONSE ─────────────────────────────────────────────────────────
+function parseResponse(raw) {
+  const lines = raw.trim().split('\n');
+  let status = 'answered';
+  let topic = 'other';
+  let textLines = [];
+  let metaParsed = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!metaParsed && line.startsWith('STATUS:')) {
+      status = line.replace('STATUS:', '').trim();
+    } else if (!metaParsed && line.startsWith('TOPIC:')) {
+      topic = line.replace('TOPIC:', '').trim();
+    } else {
+      metaParsed = true;
+      textLines.push(line);
+    }
+  }
+
+  return { status, topic, text: textLines.join('\n').trim() };
+}
+
+// ─── TIMESTAMP ─────────────────────────────────────────────────────────────────
+function timeStr() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ─── MAIN APP ──────────────────────────────────────────────────────────────────
+function App() {
+  const [view, setView] = useState('parent');
+  const [kb, setKb] = useState(DEFAULT_KB);
+  const [apiKey, setApiKey] = useState('');
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      role: 'bot',
+      text: `Hi there! 👋 I'm the Sunny Sprouts Front Desk assistant. I can help you with hours, tuition, our sick policy, lunch info, tours, and more. What can I help you with today?`,
+      status: 'answered',
+      topic: 'other',
+      time: timeStr()
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [log, setLog] = useState([]);
+  const [saveFeedback, setSaveFeedback] = useState('');
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  const QUICK = [
+    "Are you open Veterans Day?",
+    "What's the fever policy?",
+    "What's for lunch today?",
+    "How do I schedule a tour?",
+    "What's tuition for infants?",
+    "Can someone else pick up my child?"
+  ];
+
+  async function sendMessage(text) {
+    if (!text.trim() || loading) return;
+    const userMsg = { id: Date.now(), role: 'user', text: text.trim(), time: timeStr() };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    setLoading(true);
+
+    if (!apiKey) {
+      const botMsg = {
+        id: Date.now() + 1,
+        role: 'bot',
+        text: "To get real AI answers, please enter your Anthropic API key in the Operator view (top right). In the meantime, I'm here to help — try one of the quick questions above!",
+        status: 'unknown',
+        topic: 'other',
+        time: timeStr()
+      };
+      setMessages(prev => [...prev, botMsg]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const history = messages
+        .filter(m => m.role === 'user' || m.role === 'bot')
+        .map(m => ({
+          role: m.role === 'user' ? 'user' : 'assistant',
+          content: m.role === 'bot' ? (m._raw || m.text) : m.text
+        }));
+
+      history.push({ role: 'user', content: text.trim() });
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 400,
+          system: buildSystemPrompt(kb),
+          messages: history
+        })
+      });
+
+      const data = await res.json();
+      const raw = data.content?.[0]?.text || "I'm sorry, I couldn't process that. Please try again or call us directly.";
+      const parsed = parseResponse(raw);
+
+      const botMsg = {
+        id: Date.now() + 1,
+        role: 'bot',
+        text: parsed.text,
+        _raw: raw,
+        status: parsed.status,
+        topic: parsed.topic,
+        time: timeStr()
+      };
+
+      setMessages(prev => [...prev, botMsg]);
+      setLog(prev => [{
+        id: Date.now(),
+        question: text.trim(),
+        answer: parsed.text,
+        status: parsed.status,
+        topic: parsed.topic,
+        time: timeStr()
+      }, ...prev]);
+
+    } catch (err) {
+      const botMsg = {
+        id: Date.now() + 1,
+        role: 'bot',
+        text: "Something went wrong connecting to the AI. Please check the API key in the Operator view, or call us at (512) 555-0193.",
+        status: 'unknown',
+        topic: 'other',
+        time: timeStr()
+      };
+      setMessages(prev => [...prev, botMsg]);
+    }
+
+    setLoading(false);
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  }
+
+  function saveKb() {
+    setSaveFeedback('✓ Knowledge base saved!');
+    setTimeout(() => setSaveFeedback(''), 3000);
+  }
+
+  function addToKb(question) {
+    setKb(prev => ({
+      ...prev,
+      customFAQ: prev.customFAQ + `\n\nQ: ${question}\nA: [Add your answer here]`
+    }));
+    setView('operator');
+  }
+
+  const totalAsked = log.length;
+  const answered = log.filter(l => l.status === 'answered').length;
+  const flagged = log.filter(l => l.status !== 'answered').length;
+
+  return (
+    <div id="root" style={{minHeight:'100vh',display:'flex',flexDirection:'column'}}>
+      {/* TOP NAV */}
+      <nav className="topnav">
+        <div className="logo">
+          <div className="logo-icon">🌱</div>
+          <span>Sunny Sprouts</span>
+        </div>
+        <div className="view-toggle">
+          <button className={`view-btn ${view==='parent'?'active':''}`} onClick={()=>setView('parent')}>
+            🧒 Parent View
+          </button>
+          <button className={`view-btn ${view==='operator'?'active':''}`} onClick={()=>setView('operator')}>
+            🏫 Operator
+          </button>
+        </div>
+      </nav>
+
+      {/* PARENT VIEW */}
+      {view === 'parent' && (
+        <div className="parent-view">
+          <div className="chat-header">
+            <div className="avatar">🌱</div>
+            <div className="chat-header-info">
+              <h2>Sunny Sprouts Front Desk</h2>
+              <p><span className="online-dot"/>AI assistant · Instant answers, 24/7</p>
+            </div>
+          </div>
+
+          <div className="quick-questions">
+            {QUICK.map(q => (
+              <button key={q} className="quick-chip" onClick={()=>sendMessage(q)}>{q}</button>
+            ))}
+          </div>
+
+          <div className="chat-messages">
+            {messages.map(msg => (
+              <div key={msg.id} className={`message ${msg.role}`}>
+                <div className={`msg-avatar ${msg.role}`}>
+                  {msg.role === 'bot' ? '🌱' : '👤'}
+                </div>
+                <div>
+                  <div className={`bubble ${msg.role} ${msg.status==='escalated'||msg.status==='unknown'?'escalation':''}`}>
+                    {(msg.status==='escalated'||msg.status==='unknown') && msg.role==='bot' && (
+                      <div className="escalation-tag">⚡ Staff follow-up</div>
+                    )}
+                    {msg.text}
+                  </div>
+                  <div className="timestamp">{msg.time}</div>
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="message bot">
+                <div className="msg-avatar bot">🌱</div>
+                <div className="bubble bot">
+                  <div className="typing-indicator">
+                    <div className="typing-dot"/>
+                    <div className="typing-dot"/>
+                    <div className="typing-dot"/>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef}/>
+          </div>
+
+          <div className="chat-input-area">
+            <textarea
+              className="chat-input"
+              rows={1}
+              placeholder="Ask a question about our center..."
+              value={input}
+              onChange={e=>setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <button className="send-btn" onClick={()=>sendMessage(input)} disabled={loading||!input.trim()}>
+              ➤
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* OPERATOR VIEW */}
+      {view === 'operator' && (
+        <div className="operator-view">
+          <div className="op-header">
+            <h1>🏫 Operator Control Center</h1>
+            <p>Manage your AI front desk knowledge base and review parent questions</p>
+          </div>
+
+          {/* API KEY */}
+          {!apiKey && (
+            <div className="api-key-banner">
+              <strong>⚡ Connect your Anthropic API key to enable live AI responses</strong>
+              <div className="api-key-input-row">
+                <input
+                  className="api-key-input"
+                  type="password"
+                  placeholder="sk-ant-..."
+                  value={apiKeyInput}
+                  onChange={e=>setApiKeyInput(e.target.value)}
+                />
+                <button className="api-key-btn" onClick={()=>setApiKey(apiKeyInput)}>Connect</button>
+              </div>
+            </div>
+          )}
+          {apiKey && (
+            <div style={{background:'var(--green-light)',border:'1.5px solid var(--green)',borderRadius:'var(--radius-sm)',padding:'10px 16px',marginBottom:'16px',fontSize:'13px',color:'var(--green)',fontWeight:600,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              ✓ API key connected — AI front desk is live
+              <button onClick={()=>setApiKey('')} style={{background:'none',border:'none',color:'var(--coral)',cursor:'pointer',fontSize:'13px',fontWeight:700}}>Disconnect</button>
+            </div>
+          )}
+
+          {/* STATS */}
+          <div className="stats-row">
+            <div className="stat-card">
+              <div className="stat-icon green">💬</div>
+              <div>
+                <div className="stat-value">{totalAsked}</div>
+                <div className="stat-label">Questions Asked</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon sun">✅</div>
+              <div>
+                <div className="stat-value">{answered}</div>
+                <div className="stat-label">Answered by AI</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon coral">⚡</div>
+              <div>
+                <div className="stat-value">{flagged}</div>
+                <div className="stat-label">Needs Staff Review</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="op-grid">
+            {/* KNOWLEDGE BASE EDITOR */}
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">📋 Knowledge Base</div>
+              </div>
+              <div className="panel-body kb-overflow">
+                {[
+                  { key:'hours', label:'Hours of Operation' },
+                  { key:'holidays', label:'Holiday Closures' },
+                  { key:'tuition', label:'Tuition & Fees' },
+                  { key:'sickPolicy', label:'Sick / Illness Policy' },
+                  { key:'lunch', label:'Lunch & Snacks' },
+                  { key:'tours', label:'Tours & Enrollment' },
+                  { key:'dropoffPickup', label:'Drop-off & Pickup Windows' },
+                  { key:'enrollmentDocs', label:'Enrollment Documents Required' },
+                  { key:'allergies', label:'Allergy Policy' },
+                  { key:'authorizedPickup', label:'Authorized Pickup Policy' },
+                  { key:'pottyTraining', label:'Potty Training Policy' },
+                  { key:'customFAQ', label:'Custom Q&A (add any policies here)' },
+                ].map(({key, label}) => (
+                  <div className="kb-section" key={key}>
+                    <div className="kb-field">
+                      <label>{label}</label>
+                      <textarea
+                        className="kb-input"
+                        rows={key==='customFAQ'?5:2}
+                        value={kb[key]}
+                        onChange={e=>setKb(prev=>({...prev,[key]:e.target.value}))}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <button className="save-btn" onClick={saveKb}>Save Knowledge Base</button>
+                {saveFeedback && <div className="save-success">{saveFeedback}</div>}
+              </div>
+            </div>
+
+            {/* QUESTION LOG */}
+            <div className="panel">
+              <div className="panel-header">
+                <div className="panel-title">📊 Parent Question Log</div>
+                {flagged > 0 && (
+                  <span className="badge escalated">⚡ {flagged} need review</span>
+                )}
+              </div>
+              <div className="panel-body">
+                {log.length === 0 ? (
+                  <div className="empty-log">
+                    <div style={{fontSize:32,marginBottom:10}}>💬</div>
+                    <div style={{fontWeight:600}}>No questions yet</div>
+                    <div style={{marginTop:4,fontSize:13}}>Switch to Parent View and ask something!</div>
+                  </div>
+                ) : (
+                  <div className="log-list">
+                    {log.map(item => (
+                      <div key={item.id} className={`log-item ${item.status!=='answered'?'flagged':''}`}>
+                        <div className="log-q">"{item.question}"</div>
+                        <div className="log-a">{item.answer.substring(0,120)}{item.answer.length>120?'…':''}</div>
+                        <div className="log-meta">
+                          <span className={`badge ${item.status==='answered'?'answered':item.status==='escalated'?'escalated':'unknown'}`}>
+                            {item.status==='answered'?'✓ Answered':item.status==='escalated'?'⚡ Escalated':'❓ Unknown'}
+                          </span>
+                          <span style={{fontSize:11,color:'var(--text-muted)'}}>{item.topic} · {item.time}</span>
+                          {item.status !== 'answered' && (
+                            <button className="add-to-kb-btn" onClick={()=>addToKb(item.question)}>
+                              + Add to KB
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
