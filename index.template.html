@@ -760,6 +760,9 @@ function App() {
   const [opAuthed, setOpAuthed] = useState(false);
   const [opPasswordInput, setOpPasswordInput] = useState('');
   const [opAuthError, setOpAuthError] = useState(false);
+  const [kbHighlight, setKbHighlight] = useState(false);
+  const [pendingKbAdd, setPendingKbAdd] = useState(null);
+  const customFaqRef = useRef(null);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -888,11 +891,42 @@ function App() {
   }
 
   function addToKb(question) {
-    setKb(prev => ({
+    const updated = (prev) => ({
       ...prev,
       customFAQ: prev.customFAQ + `\n\nQ: ${question}\nA: [Add your answer here]`
-    }));
+    });
+    setKb(updated);
     setView('operator');
+    if (opAuthed) {
+      // Already authed — scroll to custom FAQ and highlight it
+      setTimeout(() => {
+        customFaqRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        customFaqRef.current?.focus();
+        setKbHighlight(true);
+        setTimeout(() => setKbHighlight(false), 2000);
+      }, 100);
+    } else {
+      // Not authed — store question so we can highlight after login
+      setPendingKbAdd(question);
+    }
+  }
+
+  function handleOpLogin() {
+    if (opPasswordInput === OPERATOR_PASSWORD) {
+      setOpAuthed(true);
+      setOpAuthError(false);
+      if (pendingKbAdd) {
+        setPendingKbAdd(null);
+        setTimeout(() => {
+          customFaqRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          customFaqRef.current?.focus();
+          setKbHighlight(true);
+          setTimeout(() => setKbHighlight(false), 2000);
+        }, 200);
+      }
+    } else {
+      setOpAuthError(true);
+    }
   }
 
   const totalAsked = log.length;
@@ -995,12 +1029,12 @@ function App() {
               placeholder="Staff password"
               value={opPasswordInput}
               onChange={e=>{setOpPasswordInput(e.target.value);setOpAuthError(false);}}
-              onKeyDown={e=>{if(e.key==='Enter'){if(opPasswordInput===OPERATOR_PASSWORD){setOpAuthed(true);}else{setOpAuthError(true);}}}}
+              onKeyDown={e=>{if(e.key==='Enter'){handleOpLogin();}}}
               style={{width:'100%',border:`1.5px solid ${opAuthError?'var(--coral)':'var(--border)'}`,borderRadius:'var(--radius-sm)',padding:'10px 14px',fontFamily:"'Quicksand',sans-serif",fontSize:14,outline:'none',marginBottom:8,background:'var(--bg)'}}
             />
             {opAuthError && <div style={{color:'var(--coral)',fontSize:12,fontWeight:600,marginBottom:8}}>Incorrect password — try again</div>}
             <button
-              onClick={()=>{if(opPasswordInput===OPERATOR_PASSWORD){setOpAuthed(true);}else{setOpAuthError(true);}}}
+              onClick={handleOpLogin}
               style={{width:'100%',background:'linear-gradient(135deg,var(--green),#3D9970)',color:'white',border:'none',borderRadius:'var(--radius-sm)',padding:'11px',fontFamily:"'Quicksand',sans-serif",fontWeight:700,fontSize:14,cursor:'pointer',marginTop:4}}
             >
               Sign In
@@ -1093,9 +1127,11 @@ function App() {
                       <label>{label}</label>
                       <textarea
                         className="kb-input"
+                        ref={key==='customFAQ' ? customFaqRef : null}
                         rows={key==='customFAQ'?5:2}
                         value={kb[key]}
                         onChange={e=>setKb(prev=>({...prev,[key]:e.target.value}))}
+                        style={key==='customFAQ' && kbHighlight ? {borderColor:'var(--sun)',background:'var(--sun-light)',transition:'all 0.3s'} : {}}
                       />
                     </div>
                   </div>
