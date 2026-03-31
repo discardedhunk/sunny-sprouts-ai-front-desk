@@ -198,13 +198,23 @@
       overflow-y: hidden;
       white-space: nowrap;
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      scrollbar-width: thin;
+      scrollbar-color: #C8E6D4 transparent;
       display: block;
       width: 100%;
       box-sizing: border-box;
+      cursor: grab;
     }
 
-    .quick-questions::-webkit-scrollbar { display: none; }
+    .quick-questions.dragging { cursor: grabbing; }
+    .quick-questions::-webkit-scrollbar { height: 4px; }
+    .quick-questions::-webkit-scrollbar-track { background: transparent; }
+    .quick-questions::-webkit-scrollbar-thumb { background: #C8E6D4; border-radius: 4px; }
+
+    @media (hover: none) {
+      .quick-questions { scrollbar-width: none; cursor: default; }
+      .quick-questions::-webkit-scrollbar { display: none; }
+    }
 
     .quick-chip {
       display: inline-block;
@@ -1320,6 +1330,28 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+// Mouse drag-to-scroll for quick questions on desktop
+document.addEventListener('DOMContentLoaded', () => {
+  function initDragScroll() {
+    const el = document.querySelector('.quick-questions');
+    if (!el) return setTimeout(initDragScroll, 200);
+    let isDown = false, startX, scrollLeft;
+    el.addEventListener('mousedown', e => {
+      isDown = true;
+      el.classList.add('dragging');
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+    });
+    document.addEventListener('mouseup', () => { isDown = false; el.classList.remove('dragging'); });
+    el.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      el.scrollLeft = scrollLeft - (e.pageX - el.offsetLeft - startX);
+    });
+  }
+  initDragScroll();
+});
 </script>
 </body>
 </html>
