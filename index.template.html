@@ -31,8 +31,11 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html {
+      overflow-x: clip;
+    }
+
     html, body {
-      overflow-x: hidden;
       max-width: 100%;
       width: 100%;
     }
@@ -43,13 +46,14 @@
       color: var(--text);
       min-height: 100vh;
       font-size: 15px;
+      overflow-x: clip;
     }
 
     #root {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
+      overflow-x: clip;
       width: 100%;
       max-width: 100%;
     }
@@ -129,7 +133,9 @@
       max-width: 480px;
       margin: 0 auto;
       width: 100%;
-      overflow: hidden;
+      overflow-x: clip;
+      overflow-y: hidden;
+    }
     }
 
     .chat-header {
@@ -184,12 +190,14 @@
       flex-wrap: nowrap;
       gap: 8px;
       overflow-x: auto;
-      overflow-y: hidden;
+      overflow-y: visible;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       touch-action: pan-x;
       max-width: 100%;
-      contain: content;
+      width: 100%;
+      position: relative;
+      isolation: isolate;
     }
 
     .quick-questions::-webkit-scrollbar { display: none; }
