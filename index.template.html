@@ -569,6 +569,8 @@
     .badge.answered { background: var(--green-light); color: var(--green); }
     .badge.escalated { background: var(--sun-light); color: #CC8800; }
     .badge.unknown { background: var(--coral-light); color: var(--coral); }
+    .badge.reviewed { background: #F0F0F0; color: #888; }
+    .badge.unknown { background: var(--coral-light); color: var(--coral); }
 
     .add-to-kb-btn {
       margin-left: auto;
@@ -946,9 +948,13 @@ function App() {
     }
   }
 
+  function markReviewed(id) {
+    setLog(prev => prev.map(l => l.id === id ? { ...l, status: 'reviewed' } : l));
+  }
+
   const totalAsked = log.length;
   const answered = log.filter(l => l.status === 'answered').length;
-  const flagged = log.filter(l => l.status !== 'answered').length;
+  const flagged = log.filter(l => l.status !== 'answered' && l.status !== 'reviewed').length;
 
   return (
     <div id="root" style={{minHeight:'100vh',display:'flex',flexDirection:'column'}}>
@@ -1176,18 +1182,25 @@ function App() {
                 ) : (
                   <div className="log-list">
                     {log.map(item => (
-                      <div key={item.id} className={`log-item ${item.status!=='answered'?'flagged':''}`}>
+                      <div key={item.id} className={`log-item ${item.status!=='answered' && item.status!=='reviewed' ? 'flagged':''}`}
+                        style={item.status==='reviewed' ? {opacity:0.5} : {}}>
                         <div className="log-q">"{item.question}"</div>
                         <div className="log-a">{item.answer.substring(0,120)}{item.answer.length>120?'…':''}</div>
                         <div className="log-meta">
-                          <span className={`badge ${item.status==='answered'?'answered':item.status==='escalated'?'escalated':'unknown'}`}>
-                            {item.status==='answered'?'✓ Answered':item.status==='escalated'?'⚡ Escalated':'❓ Unknown'}
+                          <span className={`badge ${item.status==='answered'?'answered':item.status==='reviewed'?'reviewed':item.status==='escalated'?'escalated':'unknown'}`}>
+                            {item.status==='answered'?'✓ Answered':item.status==='reviewed'?'✓ Reviewed':item.status==='escalated'?'⚡ Escalated':'❓ Unknown'}
                           </span>
                           <span style={{fontSize:11,color:'var(--text-muted)'}}>{item.topic} · {item.time}</span>
-                          {item.status !== 'answered' && (
-                            <button className="add-to-kb-btn" onClick={()=>addToKb(item.question)}>
-                              + Add to KB
-                            </button>
+                          {(item.status !== 'answered' && item.status !== 'reviewed') && (
+                            <div style={{marginLeft:'auto',display:'flex',gap:6}}>
+                              <button className="add-to-kb-btn" onClick={()=>markReviewed(item.id)}
+                                style={{background:'#888'}}>
+                                ✓ Reviewed
+                              </button>
+                              <button className="add-to-kb-btn" onClick={()=>addToKb(item.question)}>
+                                + Add to KB
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
