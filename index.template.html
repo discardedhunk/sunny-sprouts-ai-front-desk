@@ -754,7 +754,12 @@ const OPERATOR_PASSWORD = "__OPERATOR_PASSWORD__";
 
 function App() {
   const [view, setView] = useState('parent');
-  const [kb, setKb] = useState(DEFAULT_KB);
+  const [kb, setKb] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ss_kb');
+      return saved ? { ...DEFAULT_KB, ...JSON.parse(saved) } : DEFAULT_KB;
+    } catch { return DEFAULT_KB; }
+  });
   const [apiKey, setApiKey] = useState("__ANTHROPIC_API_KEY__");
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [opAuthed, setOpAuthed] = useState(false);
@@ -854,14 +859,25 @@ function App() {
       };
 
       setMessages(prev => [...prev, botMsg]);
-      setLog(prev => [{
-        id: Date.now(),
-        question: text.trim(),
-        answer: parsed.text,
-        status: parsed.status,
-        topic: parsed.topic,
-        time: timeStr()
-      }, ...prev]);
+      setLog(prev => {
+        const normalized = text.trim().toLowerCase();
+        const existing = prev.findIndex(l => l.question.toLowerCase() === normalized);
+        const entry = {
+          id: existing >= 0 ? prev[existing].id : Date.now(),
+          question: text.trim(),
+          answer: parsed.text,
+          status: parsed.status,
+          topic: parsed.topic,
+          time: timeStr()
+        };
+        if (existing >= 0) {
+          // Update in place, move to top
+          const updated = [...prev];
+          updated.splice(existing, 1);
+          return [entry, ...updated];
+        }
+        return [entry, ...prev];
+      });
 
     } catch (err) {
       const botMsg = {
@@ -886,6 +902,7 @@ function App() {
   }
 
   function saveKb() {
+    try { localStorage.setItem('ss_kb', JSON.stringify(kb)); } catch {}
     setSaveFeedback('✓ Knowledge base saved!');
     setTimeout(() => setSaveFeedback(''), 3000);
   }
