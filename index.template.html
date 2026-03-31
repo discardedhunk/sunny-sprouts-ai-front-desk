@@ -746,11 +746,16 @@ function timeStr() {
 }
 
 // ─── MAIN APP ──────────────────────────────────────────────────────────────────
+const OPERATOR_PASSWORD = "__OPERATOR_PASSWORD__";
+
 function App() {
   const [view, setView] = useState('parent');
   const [kb, setKb] = useState(DEFAULT_KB);
   const [apiKey, setApiKey] = useState("__ANTHROPIC_API_KEY__");
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [opAuthed, setOpAuthed] = useState(false);
+  const [opPasswordInput, setOpPasswordInput] = useState('');
+  const [opAuthError, setOpAuthError] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -975,11 +980,39 @@ function App() {
       )}
 
       {/* OPERATOR VIEW */}
-      {view === 'operator' && (
+      {view === 'operator' && !opAuthed && (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',flex:1,padding:'40px 20px'}}>
+          <div style={{background:'white',border:'1.5px solid var(--border)',borderRadius:'var(--radius)',padding:'36px',maxWidth:'360px',width:'100%',boxShadow:'var(--shadow-lg)',textAlign:'center'}}>
+            <div style={{fontSize:40,marginBottom:12}}>🔒</div>
+            <h2 style={{fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:20,marginBottom:6}}>Operator Access</h2>
+            <p style={{color:'var(--text-muted)',fontSize:13,marginBottom:24}}>Enter your staff password to access the control center</p>
+            <input
+              type="password"
+              placeholder="Staff password"
+              value={opPasswordInput}
+              onChange={e=>{setOpPasswordInput(e.target.value);setOpAuthError(false);}}
+              onKeyDown={e=>{if(e.key==='Enter'){if(opPasswordInput===OPERATOR_PASSWORD){setOpAuthed(true);}else{setOpAuthError(true);}}}}
+              style={{width:'100%',border:`1.5px solid ${opAuthError?'var(--coral)':'var(--border)'}`,borderRadius:'var(--radius-sm)',padding:'10px 14px',fontFamily:"'Quicksand',sans-serif",fontSize:14,outline:'none',marginBottom:8,background:'var(--bg)'}}
+            />
+            {opAuthError && <div style={{color:'var(--coral)',fontSize:12,fontWeight:600,marginBottom:8}}>Incorrect password — try again</div>}
+            <button
+              onClick={()=>{if(opPasswordInput===OPERATOR_PASSWORD){setOpAuthed(true);}else{setOpAuthError(true);}}}
+              style={{width:'100%',background:'linear-gradient(135deg,var(--green),#3D9970)',color:'white',border:'none',borderRadius:'var(--radius-sm)',padding:'11px',fontFamily:"'Quicksand',sans-serif",fontWeight:700,fontSize:14,cursor:'pointer',marginTop:4}}
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+      )}
+
+      {view === 'operator' && opAuthed && (
         <div className="operator-view">
-          <div className="op-header">
-            <h1>🏫 Operator Control Center</h1>
-            <p>Manage your AI front desk knowledge base and review parent questions</p>
+          <div className="op-header" style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}}>
+            <div>
+              <h1>🏫 Operator Control Center</h1>
+              <p>Manage your AI front desk knowledge base and review parent questions</p>
+            </div>
+            <button onClick={()=>{setOpAuthed(false);setOpPasswordInput('');setView('parent');}} style={{background:'none',border:'1.5px solid var(--border)',borderRadius:'var(--radius-sm)',padding:'6px 12px',fontFamily:"'Quicksand',sans-serif",fontWeight:700,fontSize:12,color:'var(--text-muted)',cursor:'pointer'}}>Sign out</button>
           </div>
 
           {/* API KEY */}
