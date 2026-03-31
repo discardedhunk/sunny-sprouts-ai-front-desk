@@ -161,9 +161,13 @@
       background: var(--green-light);
       border-bottom: 1px solid #D4EDDA;
       display: flex;
+      flex-wrap: nowrap;
       gap: 8px;
       overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      touch-action: pan-x;
     }
 
     .quick-questions::-webkit-scrollbar { display: none; }
