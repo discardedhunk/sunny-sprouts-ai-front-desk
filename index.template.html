@@ -566,9 +566,11 @@
       width: 100%;
       outline: none;
       transition: border-color 0.2s;
-      resize: vertical;
+      resize: none;
       min-height: 72px;
+      overflow-y: hidden;
       box-sizing: border-box;
+      -webkit-appearance: none;
     }
 
     .kb-input:focus { border-color: var(--green); background: white; }
@@ -881,6 +883,17 @@ function App() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (view === 'operator' && opAuthed) {
+      setTimeout(() => {
+        document.querySelectorAll('.kb-input').forEach(ta => {
+          ta.style.height = '72px';
+          ta.style.height = ta.scrollHeight + 'px';
+        });
+      }, 50);
+    }
+  }, [view, opAuthed]);
 
   const QUICK = [
     "Open Veterans Day?",
@@ -1214,13 +1227,6 @@ function App() {
               </div>
             </div>
           )}
-          {apiKey && (
-            <div style={{background:'var(--green-light)',border:'1.5px solid var(--green)',borderRadius:'var(--radius-sm)',padding:'10px 16px',marginBottom:'16px',fontSize:'13px',color:'var(--green)',fontWeight:600,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              ✓ API key connected — AI front desk is live
-              <button onClick={()=>setApiKey('')} style={{background:'none',border:'none',color:'var(--coral)',cursor:'pointer',fontSize:'13px',fontWeight:700}}>Disconnect</button>
-            </div>
-          )}
-
           {/* STATS */}
           <div className="stats-row">
             <div className="stat-card">
@@ -1277,7 +1283,11 @@ function App() {
                         value={kb[key]}
                         onChange={e=>{
                           setKb(prev=>({...prev,[key]:e.target.value}));
-                          e.target.style.height='auto';
+                          e.target.style.height='72px';
+                          e.target.style.height=e.target.scrollHeight+'px';
+                        }}
+                        onFocus={e=>{
+                          e.target.style.height='72px';
                           e.target.style.height=e.target.scrollHeight+'px';
                         }}
                         style={key==='customFAQ' && kbHighlight ? {borderColor:'var(--sun)',background:'var(--sun-light)',transition:'all 0.3s'} : {}}
